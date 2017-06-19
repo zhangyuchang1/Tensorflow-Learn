@@ -47,7 +47,7 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 # 卷积和池化
-def conv2d(s, W):
+def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
 def max_pool_2x2(x):
@@ -60,7 +60,7 @@ b_conv1 = bias_variable([32])
 x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 # 把x_image和权重向量卷积，加上偏置项，用Relu激活函数，最后max pooling
-h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1 + b_conv1))
+h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
 
 # 第二层卷积
@@ -87,7 +87,22 @@ b_fc2 = bias_variable([10])
 
 y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
 
-# 训练和评估模型
+# 训练和评估模型  运行需要几十分钟
+cross_entropy = -tf.reduce_sum(y_ * tf.log(y_conv))
+train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+sess.run(tf.initialize_all_variables())
+
+# for i in range(20000)
+for i in range(2000):
+    batch = mnist.train.next_batch(50)
+    if i%100 == 0:
+        train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
+        print 'step %d training accuracy %g'%(i, train_accuracy)
+    train_step.run(feed_dict= {x: batch[0], y_: batch[1], keep_prob: 0.5})
+
+print '卷积神经网络学习test accuracy %g'%accuracy.eval(feed_dict={x: mnist.test.images, y_:mnist.test.labels, keep_prob: 1.0})
 
 
 
