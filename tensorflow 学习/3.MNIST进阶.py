@@ -37,6 +37,7 @@ print accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels})
 
 
 # ---------------- 构建一个多层卷积网络 -------------------
+
 # 权重初始化
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
