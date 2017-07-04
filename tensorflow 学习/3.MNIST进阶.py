@@ -11,6 +11,9 @@ sess = tf.InteractiveSession()
 # 构建图
 x = tf.placeholder('float', shape=[None, 784])
 y_ = tf.placeholder('float', shape=[None, 10])
+
+'''
+
 # 变量
 W = tf.Variable(tf.zeros([784, 10]))
 b = tf.Variable(tf.zeros([10]))
@@ -35,7 +38,7 @@ correct_prediction = tf.equal(tf.arg_max(y, 1), tf.arg_max(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
 print accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels})
 
-
+'''
 # ---------------- 构建一个多层卷积网络 -------------------
 
 # 权重初始化
@@ -106,7 +109,7 @@ for i in range(2000):
 print '卷积神经网络学习test accuracy %g'%accuracy.eval(feed_dict={x: mnist.test.images, y_:mnist.test.labels, keep_prob: 1.0})
 
 
-
+# 详细注释 参考http://www.cnblogs.com/shihuc/p/6648130.html
 
 
 
