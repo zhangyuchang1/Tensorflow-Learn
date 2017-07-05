@@ -103,10 +103,10 @@ for i in range(2000):
     batch = mnist.train.next_batch(50)
     if i%100 == 0:
         train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
-        print 'step %d training accuracy %g'%(i, train_accuracy)
+        print ('step %d training accuracy %g' , i, train_accuracy)
     train_step.run(feed_dict= {x: batch[0], y_: batch[1], keep_prob: 0.5})
 
-print '卷积神经网络学习test accuracy %g'%accuracy.eval(feed_dict={x: mnist.test.images, y_:mnist.test.labels, keep_prob: 1.0})
+print ('卷积神经网络学习test accuracy %g'%accuracy.eval(feed_dict={x: mnist.test.images, y_:mnist.test.labels, keep_prob: 1.0}))
 
 
 # 详细注释 参考http://www.cnblogs.com/shihuc/p/6648130.html

@@ -69,11 +69,11 @@ init_op = tf.global_variables_initializer()
 # 启动图，运行op
 with tf.Session() as sess:
     sess.run(init_op)
-    print sess.run(state)
+    print(sess.run(state))
 
     for _ in range(5):
         sess.run(update)
-        print sess.run(state)
+        print(sess.run(state))
 
 # fetch 取值
 input1 = tf.constant(3)
@@ -84,7 +84,7 @@ mul = tf.multiply(input1, intermed)
 
 with tf.Session() as sess:
     result = sess.run([mul, intermed])
-    print result
+    print(result)
 
 # feed 赋值
 input1 = tf.placeholder(tf.float32)
@@ -92,6 +92,6 @@ input2 = tf.placeholder(tf.float32)
 output = tf.multiply(input1, input2)
 
 with tf.Session() as sess:
-   print sess.run([output], feed_dict={input1: [7.], input2:[2.]})
+   print(sess.run([output], feed_dict={input1: [7.], input2:[2.]}))
 
 
