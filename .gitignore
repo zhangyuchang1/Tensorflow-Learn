@@ -2,3 +2,6 @@
 Kevin_YouKu_CatDog/data/test/*
 Kevin_YouKu_CatDog/data/train/*
 Kevin_YouKu_CatDog/logs/train/*
+Kevin_YouKu_CIFAR10/data/*
+Kevin_Youku_CIFAR10/data/*.bin
+Kevin_Youku_CIFAR10/log/*
