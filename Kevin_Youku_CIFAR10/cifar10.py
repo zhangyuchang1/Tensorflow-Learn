@@ -10,7 +10,7 @@ import cifar10_input
 # 定义一些参数
 BATCH_SIZE = 128
 learning_rate = 0.05
-MAX_STEP = 1000 # with this setting, it took less than 30 mins on my laptop to train. 10000
+MAX_STEP = 3000 # with this setting, it took less than 30 mins on my laptop to train. 10000
 TRIAN =True
 
 img_width = 32
@@ -135,6 +135,15 @@ def losses(logits, labels):
 
     return loss
 
+# 评估准确率
+def evaluation(logits, labels):
+    with tf.variable_scope('accuracy') as scope:
+        correct = tf.nn.in_top_k(logits, labels, 1)
+        correct = tf.cast(correct, tf.float16)
+        #取均值
+        accuray = tf.reduce_mean(correct)
+        tf.summary.scalar(scope.name + '/accuracy',accuray)
+    return accuray
 
 # 训练
 def train():
@@ -149,9 +158,11 @@ def train():
                                                 is_suffle=True)
     logits = inference(images)
     loss = losses(logits, lables)
-
+    # SGD 优化
     optimizer = tf.train.GradientDescentOptimizer(learning_rate)
     train_op = optimizer.minimize(loss, global_step=my_global_step)
+
+    train__acc = evaluation(logits, lables)
 
     saver = tf.train.Saver(tf.global_variables())
     summary_op = tf.summary.merge_all()
@@ -169,10 +180,10 @@ def train():
         for step in np.arange(MAX_STEP):
             if coord.should_stop():
                 break
-            _, loss_value = sess.run([train_op, loss])
+            _, loss_value, trainAcc= sess.run([train_op, loss, train__acc])
 
             if step % 50 == 0:
-                print('step %d, loss %.4f' % (step, loss_value))
+                print('step %d, loss %.4f accuracy %4f' % (step, loss_value, trainAcc))
 
             if step % 100 == 0:
                 summary_str = sess.run(summary_op)

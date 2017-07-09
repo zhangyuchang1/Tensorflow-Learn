@@ -64,7 +64,7 @@ def read_cifar10(data_dir, is_train, batch_size, is_suffle):
                                  capacity= 2000,
                                 min_after_dequeue=1500)
         else:
-            images, lable_batch = tf.train.batch(
+            images, label_batch = tf.train.batch(
                                   [image, label],
                                   batch_size = batch_size,
                                   num_threads=16,
@@ -114,7 +114,11 @@ def test():
 
 # test()
 
+# 获取一张图片
+def get_one_image():
 
+    image = 0
+    return image
 
 
 
