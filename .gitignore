@@ -6,3 +6,7 @@ Kevin_YouKu_CIFAR10/data/*
 Kevin_Youku_CIFAR10/data/*.bin
 Kevin_Youku_CIFAR10/log/*
 Kevin_Youku_TFRecord/Data/*
+Kevin_Youku_VGG/vgg16_pretrain/*
+Kevin_Youku_VGG/data/*
+Kevin_Youku_VGG/logs/*
+Kevin_Youku_VGG/log2/*

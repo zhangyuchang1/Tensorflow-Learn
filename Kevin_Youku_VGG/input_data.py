@@ -1,7 +1,3 @@
-#coding=utf-8
-
-# 读取二进制文件
-
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,77 +56,24 @@ def read_cifar10(data_dir, is_train, batch_size, is_suffle):
            images, label_batch = tf.train.shuffle_batch(
                                  [image, label],
                                  batch_size = batch_size,
-                                 num_threads=16,
+                                 num_threads=64,
                                  capacity= 2000,
                                 min_after_dequeue=1500)
         else:
             images, label_batch = tf.train.batch(
                                   [image, label],
                                   batch_size = batch_size,
-                                  num_threads=16,
+                                  num_threads=64,
                                   capacity=2000)
 
-        return images, tf.reshape(label_batch, [batch_size])
 
         #one-hot
         #  使用 spreate_softmax激活函数不需要onehot处理，使用softmax需要
 
         n_class = 10
-        # label_batch = tf.one_hot(label_batch, depth=n_class)
-        #
-        # return images, tf.reshape(label_batch, [batch_size, n_class])
-
-# 测试一下能不能取到图片
-
-def test():
-    data_dir = 'data/'
-    BATCH_SIZE = 10
-    image_batch, label_batch = read_cifar10(data_dir,is_train=True, batch_size=BATCH_SIZE,is_suffle=True)
-    with tf.Session() as sess:
-        i = 0
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
-
-        try:
-            while not coord.should_stop() and i<1:
-            # while i < 1:
-
-                img, label = sess.run([image_batch, label_batch])
-
-                # just one batch
-                for j in np.arange(BATCH_SIZE):
-                    # print('label: %d' %label[j])  # 格式不对
-                    print('label' , label[j])
-                    plt.imshow(img[j, : , : ,:])
-                    plt.show()
-                i += 1
-        except tf.errors.OutOfRangeError:
-            print('done')
-        finally:
-            coord.request_stop()
-
-        coord.join(threads)
+        label_batch = tf.one_hot(label_batch, depth=n_class)
+        label_batch = tf.cast(label_batch, dtype=tf.int32)
+        label_batch = tf.reshape(label_batch, [batch_size, n_class])
 
 
-# test()
-
-# 获取一张图片
-def get_one_image():
-
-    image = 0
-    return image
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return images, label_batch

@@ -13,20 +13,29 @@ IMG_H = 208
 IMG_W = 208
 BATCH_SIZE = 16
 CAPACITY = 2000
-MAX_STEP = 10000  #建议>10kR
-learning_rate = 0.0001 #建议< 0.0001
+MAX_STEP = 4000  #建议>10kR
+learning_rate = 0.02 #建议< 0.0001
 
 def run_training():
     train_dir = 'data/train/'
     logs_train_dir = 'logs/train/'
+    logs_val_dir = 'logs/val'
 
-    image, train_labels = input_data.get_file(train_dir)
-    train_batch, train_label_batch = input_data.get_batch(image,
+    train, train_labels, val, val_labels = input_data.get_file(train_dir, 0.2) # train 为ndarray图片路径
+    train_batch, train_label_batch = input_data.get_batch(train,
                                                           train_labels,
                                                           IMG_W,
                                                           IMG_H,
                                                           BATCH_SIZE,
                                                           CAPACITY)
+    val_batch, val_label_batch = input_data.get_batch(val,
+                                                      val_labels,
+                                                      IMG_W,
+                                                      IMG_H,
+                                                      BATCH_SIZE,
+                                                      CAPACITY)
+   # 原来的
+    '''
     train_logits = model.inference(train_batch,BATCH_SIZE, N_CLASSES)
     train_loss = model.losses(train_logits, train_label_batch)
     train_op = model.training(train_loss, learning_rate)
@@ -62,6 +71,70 @@ def run_training():
 
     coord.join(threads)
     sess.close()
+    '''
+    # 现在边训练边验证
+    logits = model.inference(train_batch, BATCH_SIZE, N_CLASSES)
+    loss = model.losses(logits, train_label_batch)
+    train_op = model.training(loss, learning_rate)
+    acc = model.evaluation(logits, train_label_batch)
+
+    # 在训练过程中 不断送进图片和label
+    x = tf.placeholder(tf.float32, shape=[BATCH_SIZE, IMG_W, IMG_H, 3])
+    y_ = tf.placeholder(tf.int16, shape=[BATCH_SIZE])
+
+    with tf.Session() as sess:
+        saver = tf.train.Saver()
+        sess.run(tf.global_variables_initializer())
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+        # 将训练数据 和验证数据同时写入到tb文件
+        summary_op = tf.summary.merge_all()
+
+        train_writer = tf.summary.FileWriter(logs_train_dir, sess.graph)
+        val_writer = tf.summary.FileWriter(logs_val_dir, sess.graph)
+
+        try:
+            for step in np.arange(MAX_STEP):
+                if coord.should_stop():
+                    break
+
+                tra_images, tra_labels = sess.run([train_batch, train_label_batch])
+                _, tra_loss, tra_acc = sess.run([train_op, loss, acc],
+                                                feed_dict={x:tra_images, y_:tra_labels}
+                                                )
+                if step % 50 == 0:
+                    print('step: %d, train loss: %.2f, train accuracy= %.2f%%' %(step, tra_loss, tra_acc*100))
+                    summary_str = sess.run(summary_op)
+                    train_writer.add_summary(summary_str, step)
+                # 每间隔 200步 验证一下
+                if step % 200 == 0:
+                    val_images, val_labels = sess.run([val_batch, val_label_batch])
+                    val_loss, val_acc = sess.run([loss, acc],
+                                                 feed_dict={x:val_images, y_:val_labels }
+                                                 )
+                    print('**step %d, val loss: %.3f val accuracy: %.3f ** '%(step, val_loss, val_acc*100))
+                    summary_str = sess.run(summary_op)
+                    val_writer.add_summary(summary_str, step)
+
+                if step % 2000 == 0 or (step + 1) == MAX_STEP:
+                    checkpoint_path = os.path.join(logs_train_dir, 'model.ckpt')
+                    saver.save(sess, checkpoint_path, global_step=step)
+
+        except tf.errors.OutOfRangeError:
+            print('done training - epoch limit reachea')
+
+        finally:
+            coord.request_stop()
+
+        coord.join(threads)
+
+
+
+
+
+
+
 
 
 
