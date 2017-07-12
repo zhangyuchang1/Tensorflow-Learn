@@ -6,6 +6,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import time
 
 data_dir = 'data/'
 
@@ -101,9 +102,14 @@ def test():
                 for j in np.arange(BATCH_SIZE):
                     # print('label: %d' %label[j])  # 格式不对
                     print('label' , label[j])
-                    plt.imshow(img[j, : , : ,:])
+                    img_ = img[j, :, :]
+                    plt.imshow(img_)
+                    # plt.ion()
                     plt.show()
-                i += 1
+                    time.sleep(5)
+
+            i += 1
+
         except tf.errors.OutOfRangeError:
             print('done')
         finally:
@@ -112,15 +118,94 @@ def test():
         coord.join(threads)
 
 
-# test()
+test()
 
 # 获取一张图片
 def get_one_image():
 
-    image = 0
-    return image
+    img_width = 32
+    img_height = 32
+    img_depth = 3
+    label_bytes = 1
+    img_bytes = img_height * img_width * img_depth
+
+    # 每个数据的长度 1 + 3072
+
+    filename = [os.path.join('data/', 'test_batch.bin')]
+    filename_tensor = tf.cast(filename, tf.string)
+
+    filename_queue = tf.train.string_input_producer(filename_tensor)
+    reader = tf.FixedLengthRecordReader(label_bytes + img_bytes)
+    key, value = reader.read(filename_queue)
+    record_bytes = tf.decode_raw(value, tf.uint8)
+
+    label = tf.slice(record_bytes, [0], [label_bytes])
+    label = tf.cast(label, tf.int32)
+
+    image_raw = tf.slice(record_bytes, [label_bytes], [img_bytes])
+    image_raw = tf.reshape(image_raw, [img_depth, img_height, img_width])
+    image = tf.transpose(image_raw, (1 ,2 ,0)) # convert from D/H/W to H/W/D
+    image = tf.cast(image, tf.float32)
+
+    # image = tf.image.per_image_standardization(image)
+
+    # 随机获取一张图片和对应标签
+    one_image, one_label = tf.train.shuffle_batch([image, label],
+                                                  batch_size=1,
+                                                  capacity=2,
+                                                  min_after_dequeue=1)
+
+    # one_label = tf.reshape(one_label,2)
+
+    # init = tf.global_variables_initializer()
 
 
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
+
+    # 经测试，不加线程会卡死
+    coord = tf.train.Coordinator()
+    thread = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+    img, label =  sess.run([one_image, one_label])
+    img = img[0, :, :, :]
+
+    plt.imshow(img)
+    plt.ion()   # 加上这句 图片显示不会暂停
+    plt.show()
+    print('the image is %d' %label)
+
+    # return one_image, one_label
+
+    print('l')
+    coord.request_stop()
+    coord.join(thread)
+    sess.close()
+
+    return one_image, one_label
+
+    # 用下面的with方法，会包警告没关掉queue，不知如何关闭
+    # with tf.Session() as sess:
+    #
+    #     coord = tf.train.Coordinator()
+    #     threads = tf.train.start_queue_runners(sess,coord=coord)
+    #     # sess.run(tf.global_variables_initializer()) 不会
+    #
+    #     img, label =  sess.run([one_image, one_label])
+    #     img = img[0, :, :, :]
+    #
+    #     plt.imshow(img)
+    #     plt.show()
+    #     print('the image is %d' %label)
+    #
+    # # return one_image, one_label
+    #
+    # print('l')
+    # coord.request_stop()
+    # # coord.join(threads)
+
+
+# get_one_image()
 
 
 

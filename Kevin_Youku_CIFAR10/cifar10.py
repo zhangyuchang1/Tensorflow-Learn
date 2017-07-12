@@ -201,4 +201,4 @@ def train():
     coord.join(threads)
     sess.close()
 
-train()
+# train()
